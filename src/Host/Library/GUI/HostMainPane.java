@@ -19,11 +19,17 @@ public class HostMainPane extends JPanel {
 
     private final Storage storage;
 
+    public static void main(String[] args) {
+        JFrame window = new JFrame();
+        window.setContentPane(new HostMainPane(null));
+        window.setVisible(true);
+    }
+
     public HostMainPane (Storage storage) {
         super();
 
         this.storage = storage;
-        splitPane.setLeftComponent(createJTree());
+        workSheetsPanel.add(createJTree(), BorderLayout.CENTER);
 
         setLayout(new BorderLayout());
         add(mainPanel, BorderLayout.CENTER);
@@ -172,7 +178,6 @@ public class HostMainPane extends JPanel {
 
     // components
     private JPanel mainPanel;
-    private JTree sheetSelectionTree;
     private JPanel editingPanel;
     private JButton newDirButton;
     private JLabel Directory;
@@ -182,7 +187,7 @@ public class HostMainPane extends JPanel {
     private JButton deleteFileButton;
     private JButton editDirButton;
     private JTabbedPane tabbedPane1;
-    private JFormattedTextField adressTextField;
+    private JFormattedTextField addressTextField;
     private JCheckBox passwordCheckBox;
     private JTextField passwordTextField;
     private JFormattedTextField statusFormattedTextField;
@@ -197,5 +202,9 @@ public class HostMainPane extends JPanel {
     private JScrollPane consoleScrollPane;
     private JTextPane consoleTextPane;
     private JSplitPane splitPane;
+    private JTree sheetSelectionTree;
+    private JPanel workSheetsPanel;
+    private JPanel gamesPanel;
+    private JButton fastReadButton;
 
 }
