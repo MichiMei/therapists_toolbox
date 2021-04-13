@@ -1,10 +1,6 @@
 package Host.Library.GUI;
 
-import Host.Storage;
-import Library.ContentClasses.UnimplementedException;
-
 import javax.swing.*;
-import java.io.File;
 import java.nio.file.Path;
 
 public class Dialogs {
@@ -49,9 +45,9 @@ public class Dialogs {
         msg.append(message.replace("\n", "<br>"));
         msg.append("</font></P></html>");
         String[] options = {"OK"};
-        int result = JOptionPane.showOptionDialog(
+        JOptionPane.showOptionDialog(
                 null,
-                message,
+                msg,
                 title,
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.INFORMATION_MESSAGE,
@@ -72,7 +68,7 @@ public class Dialogs {
         // create file-chooser
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        fileChooser.setCurrentDirectory(defaultPath.toFile());
+        if (defaultPath != null) fileChooser.setCurrentDirectory(defaultPath.toFile());
         int result = fileChooser.showDialog(null, "Select");
         if (result == JFileChooser.APPROVE_OPTION) {
             return fileChooser.getSelectedFile().toPath();

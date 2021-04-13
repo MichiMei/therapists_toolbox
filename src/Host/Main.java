@@ -1,6 +1,7 @@
 package Host;
 
 import Host.Library.GUI.Dialogs;
+import Library.ConnectionLayer.ConnectionTools;
 import Library.ContentClasses.UnimplementedException;
 
 import java.io.IOException;
@@ -56,14 +57,14 @@ public class Main {
 //        serverSocket.close();
     }
 
-    private Main () throws IOException {
+    /*private Main () throws IOException {
         logger = Logger.getLogger(Main.class.getName());
         logger.info("Start logging");
         prefs = Preferences.userNodeForPackage(getClass());
         readPreferences();
         loadStorage();
         hostApp = new HostGui(storage);
-    }
+    }*/
 
     /**
      * Restores the Preferences set during the previous executions
