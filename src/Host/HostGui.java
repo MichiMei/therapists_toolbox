@@ -1,24 +1,25 @@
 package Host;
 
+import Host.Library.Controller.HostController;
 import Host.Library.GUI.HostMainPane;
+import Library.ConnectionLayer.Address;
 
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 public class HostGui extends JFrame {
 
-    private JFrame window;
-    private JPanel mainPanel;
+    private final HostController controller;
 
-    private Storage storage;
+    // panes
+    HostMainPane hostMainPane;
 
-    public HostGui(Storage storage) {
+    public HostGui(HostController controller, Address address) {
         super("Therapists-Toolbox Host");
-        this.storage = storage;
+        this.controller = controller;
 
         // WINDOW //
-        window = this;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //setBounds(0,0,1000,750);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -43,7 +44,7 @@ public class HostGui extends JFrame {
 //        });
         JMenu menuSettings = new JMenu("Settings");
         menuBar.add(menuSettings);
-        JCheckBoxMenuItem menuItemSubfolderMode = new JCheckBoxMenuItem("Include subfolders", false);
+        JCheckBoxMenuItem menuItemSubfolderMode = new JCheckBoxMenuItem("Include sub-folders", false);
         menuSettings.add(menuItemSubfolderMode);
 //        menuItemSubfolderMode.addItemListener(new ItemListener() {
 //            @Override
@@ -54,26 +55,29 @@ public class HostGui extends JFrame {
 //        });
 
         // CONTENT //
-        HostMainPane mainPane = new HostMainPane(storage);
-        setContentPane(mainPane);
-
-//        mainPanel.setLayout(new BorderLayout());
-//        final AppendJTextPane a = new AppendJTextPane();
-//        a.setEditable(false);
-//        JButton b = new JButton("test");
-//        b.addActionListener(new AbstractAction() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                System.out.println("Button pressed");
-//                a.appendText("hello\n");
-//            }
-//        });
-//        mainPanel.add(b, BorderLayout.NORTH);
-//        mainPanel.add(new JScrollPane(a), BorderLayout.CENTER);
-//
-//        setContentPane(mainPanel);
+        hostMainPane = new HostMainPane(controller, address);
+        setContentPane(hostMainPane);
 
         this.setVisible(true);
     }
+
+    public void reloadSheetTree(DefaultMutableTreeNode rootNode) {
+        // TODO check if in correct state
+        hostMainPane.reloadSheetTree(rootNode);
+        repaint();
+        revalidate();
+    }
+
+    public void connected() {
+        // TODO check if in correct state
+        hostMainPane.connected();
+    }
+
+    public void disconnected() {
+        // TODO check if in correct state
+        hostMainPane.disconnected();
+    }
+
+    private JPanel mainPanel;
 
 }

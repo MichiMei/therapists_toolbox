@@ -1,6 +1,6 @@
 package Client;
 
-import Library.ConnectionTools;
+import Library.ConnectionLayer.ConnectionTools;
 
 import java.io.BufferedReader;
 import java.io.IOException;

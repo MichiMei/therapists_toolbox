@@ -1,7 +1,6 @@
 package Host;
 
 import Library.ContentClasses.UnimplementedException;
-import com.sun.source.tree.Tree;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
@@ -240,7 +239,7 @@ public class Storage {
         }
     }
 
-    public class Info {
+    public static class Info {
         private final boolean directory;
         private final String name;
         private final String path;
@@ -294,7 +293,7 @@ public class Storage {
         }
     }
 
-    private class SheetTree {
+    private static class SheetTree {
         private abstract class Node {
             protected String name;
             protected char type;
@@ -467,7 +466,7 @@ public class Storage {
                 throw new CorruptedStorageException("Index file: line missing");
             }
             String[] data = line.split("\0", -1);
-            if (data[0].equals("f") && data.length == 6) {
+            if (data[0].equals("f") && data.length == 7) {
                 // create file
                 Node child = new File(data[1], data[2], Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5], Integer.parseInt(data[6])==1);
                 children.put(data[1], child);
