@@ -31,14 +31,14 @@ public class SingleChoiceTextQuestionPane extends JPanel {
 
         // add buttons
         buttonPanel.setLayout(new GridLayout(0, 3));
-        Iterator<JButton> iter = Arrays.stream(answerButtons).iterator();
+        Iterator<JButton> iterator = Arrays.stream(answerButtons).iterator();
         if (page.randomizeAnswers()) {
             List<JButton> list = Arrays.asList(answerButtons);
             Collections.shuffle(list);
-            iter = list.iterator();
+            iterator = list.iterator();
         }
-        while (iter.hasNext()) {
-            JButton curr = iter.next();
+        while (iterator.hasNext()) {
+            JButton curr = iterator.next();
             System.out.println(curr.getText());
             buttonPanel.add(curr);
         }

@@ -9,7 +9,12 @@ package Library.Protocol;
 public class MCClose extends MessageContent {
     public static final short TYPE_ID = 0x0100;
 
-    private int errorCode;
+    /**
+     * 1: closed by user
+     * 2: protocol violation
+     * 3: password wrong
+     */
+    private final int errorCode;
 
     public MCClose(int errorCode) {
         this.errorCode = errorCode;
@@ -18,5 +23,9 @@ public class MCClose extends MessageContent {
     @Override
     public short getType() {
         return TYPE_ID;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
     }
 }

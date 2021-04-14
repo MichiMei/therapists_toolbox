@@ -1,8 +1,5 @@
 package Library.Protocol;
 
-import java.math.BigInteger;
-import java.util.Optional;
-
 /**
  * Message Type 01 02 Hello-Reply
  * Host->Client
@@ -14,20 +11,17 @@ public class MCHelloReply extends MessageContent {
 
     // success
     /**
-     * flags[0]: 1:accepted; 0:rejected
-     * flags[1]: 1:pw-required
+     * flags[0]: 1:pw-required
      */
     private byte flags;
 
     /**
      * create reply
-     * @param accept indicates weather the connection attempt is accepted or not
      * @param pwRequired indicates weather a password is required or not
      */
-    public MCHelloReply(boolean accept, boolean pwRequired) {
+    public MCHelloReply(boolean pwRequired) {
         this.flags = 0;
-        if (accept)     flags += 0b10000000;
-        if (pwRequired) flags += 0b01000000;
+        if (pwRequired) flags += 0b10000000;
     }
 
     @Override
@@ -35,12 +29,8 @@ public class MCHelloReply extends MessageContent {
         return TYPE_ID;
     }
 
-    public boolean isAccepted() {
-        return (flags & 0b10000000) != 0;
-    }
-
     public boolean isPwRequired() {
-        return (flags & 0b01000000) != 0;
+        return (flags & 0b10000000) != 0;
     }
 }
 

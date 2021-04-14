@@ -14,7 +14,7 @@ public class Address {
 
     /**
      *
-     * @param text IPv4 xxx.xxx.xxx.xxx:xxxxx; IPv6 [xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx]:xxxxx
+     * @param text IPv4 w.x.y.z:port; IPv6 [s:t:u:v:w:x:y:z]:port
      */
     public Address(String text) throws BadIPAddressException {
         if (text.charAt(0) == '[') {    // IPv6

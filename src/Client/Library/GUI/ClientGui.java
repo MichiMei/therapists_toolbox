@@ -1,18 +1,11 @@
-package Client;
+package Client.Library.GUI;
 
 import Client.Library.Controller.ClientController;
-import Client.Library.GUI.ClientLoginPane;
-import Host.Library.GUI.HostMainPane;
-import Host.Storage;
-import Library.ContentClasses.UnimplementedException;
 
 import javax.swing.*;
 
 public class ClientGui extends JFrame {
-    private JFrame window;
-    private JPanel mainPanel;
-
-    private ClientController controller;
+    private final ClientController controller;
 
     public static void main(String[] args) {
         new ClientGui(null);
@@ -23,7 +16,6 @@ public class ClientGui extends JFrame {
         this.controller = controller;
 
         // WINDOW //
-        window = this;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //setBounds(0,0,1000,750);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -44,7 +36,7 @@ public class ClientGui extends JFrame {
 
     public void connected() {
         // TODO
-        throw new UnimplementedException("ClientGui::connected() unimpl");
+        //throw new UnimplementedException("ClientGui::connected() unimpl");
     }
 
 }

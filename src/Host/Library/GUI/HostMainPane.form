@@ -7,7 +7,7 @@
     <properties/>
     <border type="none"/>
     <children>
-      <splitpane id="ba983" binding="splitPane">
+      <splitpane id="ba983">
         <constraints border-constraint="Center"/>
         <properties>
           <continuousLayout value="true"/>
@@ -29,7 +29,7 @@
                 </constraints>
                 <properties/>
               </component>
-              <tabbedpane id="81fd7" binding="tabbedPane1" default-binding="true">
+              <tabbedpane id="81fd7" default-binding="true">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
                     <preferred-size width="200" height="200"/>
@@ -46,7 +46,7 @@
                     <properties/>
                     <border type="none"/>
                     <children>
-                      <grid id="48951" binding="editingPanel" layout-manager="GridLayoutManager" row-count="2" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                      <grid id="48951" layout-manager="GridLayoutManager" row-count="2" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                         <margin top="0" left="0" bottom="0" right="0"/>
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
@@ -54,7 +54,7 @@
                         <properties/>
                         <border type="none"/>
                         <children>
-                          <component id="e3ab3" class="javax.swing.JLabel" binding="Directory">
+                          <component id="e3ab3" class="javax.swing.JLabel">
                             <constraints>
                               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -158,7 +158,7 @@
                         </constraints>
                         <properties>
                           <editable value="false"/>
-                          <text value="000.000.000.000:00000"/>
+                          <text value=""/>
                         </properties>
                       </component>
                       <component id="1513c" class="javax.swing.JCheckBox" binding="passwordCheckBox" default-binding="true">
@@ -208,7 +208,7 @@
                           <text resource-bundle="Library/Resources/StringLiterals" key="console"/>
                         </properties>
                       </component>
-                      <scrollpane id="87721" binding="consoleScrollPane">
+                      <scrollpane id="87721">
                         <constraints>
                           <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -235,7 +235,7 @@
                             <constraints/>
                             <properties>
                               <enabled value="true"/>
-                              <text resource-bundle="Library/Resources/StringLiterals" key="online"/>
+                              <text resource-bundle="Library/Resources/StringLiterals" key="offline"/>
                             </properties>
                           </component>
                           <component id="339c6" class="javax.swing.JButton" binding="disconnectButton">
@@ -248,7 +248,7 @@
                           <component id="965ab" class="javax.swing.JButton" binding="startButton" default-binding="true">
                             <constraints/>
                             <properties>
-                              <enabled value="true"/>
+                              <enabled value="false"/>
                               <text resource-bundle="Library/Resources/StringLiterals" key="start"/>
                             </properties>
                           </component>
@@ -385,7 +385,7 @@
                     <properties/>
                     <border type="none"/>
                     <children>
-                      <component id="e0fee" class="javax.swing.JTree" binding="sheetSelectionTree">
+                      <component id="e0fee" class="javax.swing.JTree">
                         <constraints/>
                         <properties/>
                       </component>
@@ -393,7 +393,7 @@
                   </scrollpane>
                 </children>
               </grid>
-              <grid id="75093" binding="gamesPanel" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="75093" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <tabbedpane title-resource-bundle="Library/Resources/StringLiterals" title-key="games"/>

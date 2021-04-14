@@ -6,11 +6,11 @@ import javax.swing.*;
 
 public class SingleChoiceTextQuestionPage implements Page {
 
-    private String question;
-    private String text; // TODO allow format
-    private String[] answers;
-    private int correctAnswer;
-    private boolean randomizeAnswers;
+    private final String question;
+    private final String text; // TODO allow format
+    private final String[] answers;
+    private final int correctAnswer;
+    private final boolean randomizeAnswers;
 
     public SingleChoiceTextQuestionPage(String question, String text, String[] answers, int correctAnswer,
                                         boolean randomizeAnswers) throws BadPageException {
@@ -63,7 +63,7 @@ public class SingleChoiceTextQuestionPage implements Page {
             sb.append("answer").append(i).append(":").append(answers[i]).append("; ");
         }
         sb.append(")");
-        return super.toString();
+        return sb.toString();
     }
 
     @Override

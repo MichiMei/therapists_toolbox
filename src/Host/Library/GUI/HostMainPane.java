@@ -1,17 +1,12 @@
 package Host.Library.GUI;
 
+import Host.Library.ConnectionLayer.HostConnector;
 import Host.Library.Controller.HostController;
-import Host.Storage;
+import Host.Library.Controller.Storage;
 import Library.ConnectionLayer.Address;
-import Library.ContentClasses.BadPageException;
-import Library.ContentClasses.Page;
-import Library.ContentClasses.SingleChoiceTextQuestionPage;
 import Library.ContentClasses.UnimplementedException;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.text.DefaultStyledDocument;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -19,14 +14,18 @@ import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 
 public class HostMainPane extends JPanel {
 
     private final HostController controller;
+    private final ResourceBundle resources;
+    private final Logger logger;
 
     public static void main(String[] args) {
         JFrame window = new JFrame();
-        window.setContentPane(new HostMainPane(null, null));
+        window.setContentPane(new HostMainPane(null));
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         window.setVisible(true);
     }
@@ -37,110 +36,79 @@ public class HostMainPane extends JPanel {
      * Creates a new Host Main (Navigation) Pane
      * @param controller Controller reference for user input delegation
      */
-    public HostMainPane (HostController controller, Address address) {
+    public HostMainPane (HostController controller) {
         super();
         this.controller = controller;
+        this.resources = ResourceBundle.getBundle("Library/Resources/StringLiterals");
+        this.logger = Logger.getLogger(HostMainPane.class.getName());
 
         workSheetsPanel.add(new JLabel(new ImageIcon(this.getClass().getResource("/Library/Resources/Icons/loading.gif"))));
 
         setLayout(new BorderLayout());
         add(mainPanel, BorderLayout.CENTER);
 
-        addressTextField.setText(address.toString());
-
         onlineToggleButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (onlineToggleButton.isSelected()) {
-                    passwordCheckBox.setEnabled(false);
-                    passwordTextField.setEditable(false);
-                    statusFormattedTextField.setText(ResourceBundle.getBundle("Library/Resources/StringLiterals").getString("going_online"));
-                    // go online
+                    // switch to online
                     String pw;
                     if (passwordCheckBox.isSelected()) {
                         pw = passwordTextField.getText();
+                        if (pw == null || pw.equals("")) {
+                            consoleTextPane.setText(resources.getString("insert_password") + "\n" + consoleTextPane.getText());
+                            return;
+                        }
                     } else {
                         pw = null;
                     }
+                    statusFormattedTextField.setText(resources.getString("going_online"));
+
                     new SwingWorker<Boolean, Object>() {
                         @Override
                         protected Boolean doInBackground() {
-                            return controller.listen(pw);
+                            return controller.goOnline(pw);
                         }
-
                         @Override
                         protected void done() {
                             try {
-                                if (get()) {
-                                    onlineToggleButton.setEnabled(false);
-                                    disconnectButton.setEnabled(true);
-                                    statusFormattedTextField.setText(ResourceBundle.getBundle("Library/Resources/StringLiterals").getString("connected"));
-                                } else {
-                                    passwordCheckBox.setEnabled(true);
-                                    passwordTextField.setEditable(true);
-                                    onlineToggleButton.setSelected(false);
-                                    statusFormattedTextField.setText(ResourceBundle.getBundle("Library/Resources/StringLiterals").getString("offline"));
+                                Boolean result = get();
+                                assert (result != null);
+                                if (!result) {
+                                    consoleTextPane.setText(resources.getString("check_internet") + "\n" + consoleTextPane.getText());
+                                    connectionStatusChanged(HostConnector.Status.Offline, null);
                                 }
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                                // TODO
+                            } catch (InterruptedException | ExecutionException e) {
+                                logger.severe("Swing Worker done exception\n" + e.toString() + "\nshutting down");
+                                e.printStackTrace();
+                                System.exit(1);
                             }
                         }
                     }.execute();
-
                 } else {
-                    passwordCheckBox.setEnabled(true);
-                    passwordTextField.setEditable(true);
-                    statusFormattedTextField.setText(ResourceBundle.getBundle("Library/Resources/StringLiterals").getString("offline"));
-                    onlineToggleButton.setEnabled(false);
-                    // go offline
-                    //SwingUtilities.invokeLater(controller::stopListen);
-
-                    new SwingWorker<>() {
-                        @Override
-                        protected Object doInBackground() {
-                            controller.stopListen();
-                            return null;
-                        }
-
-                        @Override
-                        protected void done() {
-                            onlineToggleButton.setEnabled(true);
-                        }
-                    }.execute();
+                    // switch to offline
+                    statusFormattedTextField.setText(resources.getString("going_offline"));
+                    SwingUtilities.invokeLater(controller::goOffline);
                 }
+                disableConnectionInput();
             }
         });
 
         disconnectButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                disconnectButton.setEnabled(false);
-                statusFormattedTextField.setText(ResourceBundle.getBundle("Library/Resources/StringLiterals").getString("disconnecting"));
                 SwingUtilities.invokeLater(controller::disconnect);
+                disableConnectionInput();
             }
         });
 
-        startButton.addActionListener(  // TODO
-                new AbstractAction() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        String[] answers = {"Yes", "Maybe", "Probably", "No", "Stop"};
-                        Page page = null;
-                        try {
-                            page = new SingleChoiceTextQuestionPage("What?", "U don't understand...", answers, 3, true);
-                        } catch (BadPageException badPageException) {
-                            badPageException.printStackTrace();
-                            System.exit(1);
-                        }
-                        JPanel panel = page.createPanel();
-                        JFrame window = new JFrame("test");
-                        window.add(panel, BorderLayout.CENTER);
-                        window.setVisible(true);
-                    }
-                }
-        );
-
+        startButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO
+                throw new UnimplementedException("HostMainPane::startButton::actionListener unimpl");
+            }
+        });
 
     }
 
@@ -154,49 +122,46 @@ public class HostMainPane extends JPanel {
         JTree tree = new JTree(model);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.getSelectionModel().addTreeSelectionListener(
-                new TreeSelectionListener() {
-                    @Override
-                    public void valueChanged(TreeSelectionEvent e) {
-                        TreePath path = e.getNewLeadSelectionPath();
-                        if (path == null) {
-                            String msg = "null-element selected in JTree\n";
-                            msg += "check if anything is selected\n";
-                            msg += "previous path:\n";
-                            msg += e.getOldLeadSelectionPath().toString();
-                            msg += "\n";
-                            Dialogs.developerDialog(msg);
-                            return;
+                e -> {
+                    TreePath path = e.getNewLeadSelectionPath();
+                    if (path == null) {
+                        String msg = "null-element selected in JTree\n";
+                        msg += "check if anything is selected\n";
+                        msg += "previous path:\n";
+                        msg += e.getOldLeadSelectionPath().toString();
+                        msg += "\n";
+                        Dialogs.developerDialog(msg);
+                        return;
+                    }
+                    try {
+                        Storage.Info info = controller.getFileInfo(path);
+                        infoNameTextField.setText(info.getName());
+                        infoDirTextField.setText(info.getPath());
+                        if (info.isDirectory()) {
+                            infoDescriptionTextField.setText("");
+                            infoVersionTextField1.setText("");
+                            infoPagesTextField.setText("");
+                            newDirButton.setEnabled(true);
+                            editDirButton.setEnabled(true);
+                            deleteDirButton.setEnabled(true);
+                            newFileButton.setEnabled(false);
+                            editFileButton.setEnabled(false);
+                            deleteFileButton.setEnabled(false);
+                        } else {
+                            infoDescriptionTextField.setText(info.getDescription());
+                            infoVersionTextField1.setText("" + info.getMinVersion());
+                            infoPagesTextField.setText("" + info.getPages());
+                            newDirButton.setEnabled(false);
+                            editDirButton.setEnabled(false);
+                            deleteDirButton.setEnabled(false);
+                            newFileButton.setEnabled(true);
+                            editFileButton.setEnabled(true);
+                            deleteFileButton.setEnabled(true);
                         }
-                        try {
-                            Storage.Info info = controller.getFileInfo(path);
-                            infoNameTextField.setText(info.getName());
-                            infoDirTextField.setText(info.getPath());
-                            if (info.isDirectory()) {
-                                infoDescriptionTextField.setText("");
-                                infoVersionTextField1.setText("");
-                                infoPagesTextField.setText("");
-                                newDirButton.setEnabled(true);
-                                editDirButton.setEnabled(true);
-                                deleteDirButton.setEnabled(true);
-                                newFileButton.setEnabled(false);
-                                editFileButton.setEnabled(false);
-                                deleteFileButton.setEnabled(false);
-                            } else {
-                                infoDescriptionTextField.setText(info.getDescription());
-                                infoVersionTextField1.setText("" + info.getMinVersion());
-                                infoPagesTextField.setText("" + info.getPages());
-                                newDirButton.setEnabled(false);
-                                editDirButton.setEnabled(false);
-                                deleteDirButton.setEnabled(false);
-                                newFileButton.setEnabled(true);
-                                editFileButton.setEnabled(true);
-                                deleteFileButton.setEnabled(true);
-                            }
-                        } catch (Storage.FaultyStorageStructureException ex) {
-                            ex.printStackTrace();
-                            // TODO
-                            throw new UnimplementedException("");
-                        }
+                    } catch (Storage.FaultyStorageStructureException ex) {
+                        ex.printStackTrace();
+                        // TODO
+                        throw new UnimplementedException("");
                     }
                 }
         );
@@ -204,28 +169,49 @@ public class HostMainPane extends JPanel {
         workSheetsPanel.add(tree, BorderLayout.CENTER);
     }
 
-    /**
-     * Display connected status
-     */
-    public void connected() {
-        onlineToggleButton.setEnabled(false);
-        disconnectButton.setEnabled(true);
-        statusFormattedTextField.setText(ResourceBundle.getBundle("Library/Resources/StringLiterals").getString("connected"));
-    }
-
-    /**
-     * Display offline status
-     */
-    public void disconnected() {
-        onlineToggleButton.setSelected(false);
-        onlineToggleButton.setEnabled(true);
-        disconnectButton.setEnabled(false);
-        passwordCheckBox.setEnabled(true);
-        passwordTextField.setEditable(true);
-        statusFormattedTextField.setText(ResourceBundle.getBundle("Library/Resources/StringLiterals").getString("offline"));
+    public void connectionStatusChanged(HostConnector.Status status, String msg) {
+        disableConnectionInput();
+        switch (status) {
+            case Online -> {
+                onlineToggleButton.setEnabled(true);
+                onlineToggleButton.setText(resources.getString("online"));
+                onlineToggleButton.setSelected(true);
+                statusFormattedTextField.setText(resources.getString("waiting_for_client"));
+                Address own = controller.getAddress();
+                assert (own != null);
+                addressTextField.setText(own.toString());
+            }
+            case Offline -> {
+                onlineToggleButton.setEnabled(true);
+                onlineToggleButton.setText(resources.getString("offline"));
+                onlineToggleButton.setSelected(false);
+                statusFormattedTextField.setText(resources.getString("offline"));
+                addressTextField.setText("");
+                passwordTextField.setEditable(true);
+                passwordCheckBox.setEnabled(true);
+            }
+            case Connected -> {
+                disconnectButton.setEnabled(true);
+                startButton.setEnabled(true);
+                statusFormattedTextField.setText(resources.getString("connected"));
+            }
+            case Connecting -> {
+                disconnectButton.setEnabled(true);
+                statusFormattedTextField.setText(resources.getString("connecting"));
+            }
+        }
+        if (msg != null) consoleTextPane.setText(msg + "\n" + consoleTextPane.getText());
     }
 
 /*------------------------------------------------------PRIVATE------------------------------------------------------*/
+
+    private void disableConnectionInput() {
+        onlineToggleButton.setEnabled(false);
+        disconnectButton.setEnabled(false);
+        startButton.setEnabled(false);
+        passwordCheckBox.setEnabled(false);
+        passwordTextField.setEditable(false);
+    }
 
     private void setEditingButtonListeners() {
         newDirButton.addActionListener(
@@ -295,15 +281,12 @@ public class HostMainPane extends JPanel {
 
     // components
     private JPanel mainPanel;
-    private JPanel editingPanel;
     private JButton newDirButton;
-    private JLabel Directory;
     private JButton deleteDirButton;
     private JButton newFileButton;
     private JButton editFileButton;
     private JButton deleteFileButton;
     private JButton editDirButton;
-    private JTabbedPane tabbedPane1;
     private JTextField addressTextField;
     private JCheckBox passwordCheckBox;
     private JTextField passwordTextField;
@@ -316,12 +299,8 @@ public class HostMainPane extends JPanel {
     private JTextField infoDirTextField;
     private JTextField infoDescriptionTextField;
     private JTextField infoPagesTextField;
-    private JScrollPane consoleScrollPane;
     private JTextPane consoleTextPane;
-    private JSplitPane splitPane;
-    private JTree sheetSelectionTree;
     private JPanel workSheetsPanel;
-    private JPanel gamesPanel;
     private JButton fastReadButton;
 
 }

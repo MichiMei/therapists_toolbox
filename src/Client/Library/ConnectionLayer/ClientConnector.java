@@ -1,8 +1,6 @@
 package Client.Library.ConnectionLayer;
 
-import Host.Library.Controller.HostController;
 import Library.ConnectionLayer.Address;
-import Library.ContentClasses.UnimplementedException;
 import Library.Protocol.*;
 
 import java.io.*;
@@ -20,7 +18,7 @@ public class ClientConnector {
 
     private final Logger logger;
 
-    public Connection connect() throws IOException {
+    public Connection connect() throws IOException, PasswordWrongException {
         // connect
         try {
             socket = new Socket(address.getIP(), address.getPort());
@@ -36,8 +34,9 @@ public class ClientConnector {
         try {
             connection = new Connection(socket);
         } catch (IOException e) {
+            logger.severe("Creating socket failed\n" + e.toString() + "\nshutting down");
             e.printStackTrace();
-            System.out.println("reached");
+            System.exit(1);
         }
         try {
             System.out.println("here");
@@ -63,10 +62,10 @@ public class ClientConnector {
     }
 
     public class Connection {
-        private Logger logger;
+        private final Logger logger;
 
-        private ObjectInputStream in;
-        private ObjectOutputStream out;
+        private final ObjectInputStream in;
+        private final ObjectOutputStream out;
 
         public Connection (Socket socket) throws IOException {
             logger = Logger.getLogger(Connection.class.getName());
@@ -75,7 +74,7 @@ public class ClientConnector {
             in = new ObjectInputStream(socket.getInputStream());
         }
 
-        private boolean initiateCommunication() throws ConnectionClosedException, ProtocolViolationException {
+        private boolean initiateCommunication() throws ConnectionClosedException, ProtocolViolationException, PasswordWrongException {
             // send Hello
             MessageContent tmp = new MCHello(version);
             Message hello = new Message(tmp.getType(), tmp);
@@ -87,10 +86,6 @@ public class ClientConnector {
             Message msg = receiveMessage();
             if (msg.getType() == MCHelloReply.TYPE_ID) {    // parse reply
                 MCHelloReply content = (MCHelloReply) msg.getContent();
-                if (!content.isAccepted()) {                    // connection rejected
-                    logger.info("hello-reply received -> rejected");
-                    return false;
-                }
                 pwRequired = content.isPwRequired();
                 logger.info("hello-reply received");
             } else if (msg.getType() == MCClose.TYPE_ID) {  // received close
@@ -119,6 +114,10 @@ public class ClientConnector {
                 logger.info("registration-accept received\nconnection established");
                 return true;
             } else if (msg.getType() == MCClose.TYPE_ID) {          // connection rejected
+                if (((MCClose)msg.getContent()).getErrorCode() == 3) {
+                    logger.warning("password wrong");
+                    throw new PasswordWrongException();
+                }
                 logger.warning("connection closed after registration");
                 throw new ConnectionClosedException("Connection closed after registration: " + registration.toString());
             } else {                                                // received wrong message
@@ -151,4 +150,10 @@ public class ClientConnector {
         }
     }
 
+
+    public static class PasswordWrongException extends Exception {
+        public PasswordWrongException() {
+            super();
+        }
+    }
 }
