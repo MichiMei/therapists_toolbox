@@ -1,7 +1,5 @@
 package Library.Protocol;
 
-import java.math.BigInteger;
-
 /**
  * Message Type 01 01 Hello
  * Client->Host
@@ -11,7 +9,7 @@ import java.math.BigInteger;
 public class MCHello extends MessageContent {
     public static final short TYPE_ID = 0x0101;
 
-    private int version;
+    private final int version;
 
     public MCHello (int  version) {
         this.version = version;

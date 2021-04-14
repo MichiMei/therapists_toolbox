@@ -1,8 +1,7 @@
-package Host;
+package Host.Library.GUI;
 
+import Host.Library.ConnectionLayer.HostConnector;
 import Host.Library.Controller.HostController;
-import Host.Library.GUI.HostMainPane;
-import Library.ConnectionLayer.Address;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -14,7 +13,7 @@ public class HostGui extends JFrame {
     // panes
     HostMainPane hostMainPane;
 
-    public HostGui(HostController controller, Address address) {
+    public HostGui(HostController controller) {
         super("Therapists-Toolbox Host");
         this.controller = controller;
 
@@ -55,29 +54,20 @@ public class HostGui extends JFrame {
 //        });
 
         // CONTENT //
-        hostMainPane = new HostMainPane(controller, address);
+        hostMainPane = new HostMainPane(controller);
         setContentPane(hostMainPane);
 
         this.setVisible(true);
     }
 
     public void reloadSheetTree(DefaultMutableTreeNode rootNode) {
-        // TODO check if in correct state
         hostMainPane.reloadSheetTree(rootNode);
         repaint();
         revalidate();
     }
 
-    public void connected() {
-        // TODO check if in correct state
-        hostMainPane.connected();
+    public void connectionStatusChanged(HostConnector.Status status, String msg) {
+        hostMainPane.connectionStatusChanged(status, msg);
     }
-
-    public void disconnected() {
-        // TODO check if in correct state
-        hostMainPane.disconnected();
-    }
-
-    private JPanel mainPanel;
 
 }

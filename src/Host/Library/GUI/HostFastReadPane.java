@@ -8,8 +8,6 @@ import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.text.NumberFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -18,7 +16,7 @@ import java.util.function.Function;
 public class HostFastReadPane extends JPanel {
     private boolean autoDisplay = false;
     private boolean editMode = false;
-    private Separator[] separators = new Separator[4];
+    private final Separator[] separators = new Separator[4];
     private int currentSeparatorIndex;
 
     private String content = null;
@@ -26,7 +24,7 @@ public class HostFastReadPane extends JPanel {
     private int tokenEnd = -1;
     private String currentToken = null;
 
-    private class Separator {
+    private static class Separator {
         public Separator(String resourceName, Function<Character, Boolean> isDelimiter) {
             this.resourceName = resourceName;
             this.isDelimiter = isDelimiter;
@@ -58,12 +56,9 @@ public class HostFastReadPane extends JPanel {
         NumberFormat integerNumberInstance = NumberFormat.getNumberInstance();
         integerNumberInstance.setParseIntegerOnly(true);
         timeSelector = new ImprovedFormattedTextField(integerNumberInstance, 1);
-        timeSelector.addPropertyChangeListener("value", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                System.out.println("changed: " + evt.getNewValue());
-                System.out.println(evt.getNewValue().getClass());
-            }
+        timeSelector.addPropertyChangeListener("value", evt -> {
+            System.out.println("changed: " + evt.getNewValue());
+            System.out.println(evt.getNewValue().getClass());
         });
         timeSelectorPanel.add(timeSelector, BorderLayout.CENTER);
 
@@ -245,7 +240,7 @@ public class HostFastReadPane extends JPanel {
     private JTextArea textArea;
     private JPanel timeSelectorPanel;
 
-    private ImprovedFormattedTextField timeSelector;
+    private final ImprovedFormattedTextField timeSelector;
 
 
 }

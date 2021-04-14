@@ -29,14 +29,11 @@ public class Dialogs {
                 options,                                    // options string array, will be made into buttons
                 options[0]                                  // option that should be made into a default button
         );
-        switch(result) {
-            case 0: // New
-                return true;
-            case 1: // Existing
-                return false;
-            default:
-                throw new CancelPressedException("src/Host/Library/GUI/Dialogs.java: showStartDialog(...) cancel pressed");
-        }
+        return switch (result) {
+            case 0 -> true;     // New
+            case 1 -> false;    // Existing
+            default -> throw new CancelPressedException("src/Host/Library/GUI/Dialogs.java: showStartDialog(...) cancel pressed");
+        };
     }
 
     public static void developerDialog(String message) {

@@ -1,19 +1,16 @@
 package Client.Library.GUI;
 
 import Client.Library.Controller.ClientController;
-import Host.Library.GUI.HostMainPane;
 import Library.ConnectionLayer.Address;
-import Library.ContentClasses.UnimplementedException;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ResourceBundle;
-import java.util.concurrent.ExecutionException;
 
 public class ClientLoginPane  extends JPanel {
 
-    private ClientController controller;
+    private final ClientController controller;
 
     public static void main(String[] args) {
         JFrame window = new JFrame();
@@ -46,26 +43,40 @@ public class ClientLoginPane  extends JPanel {
                     return;
                 }
                 statusTextField.setText(resourceBundle.getString("connecting"));
-                // TODO try to connect
-                new SwingWorker<Boolean, Object>() {
+                // try to connect
+                new SwingWorker<Integer, Object>() {
                     @Override
-                    protected Boolean doInBackground() throws Exception {
+                    protected Integer doInBackground() {
                         return controller.connect(address, new String(passwordField.getPassword()));
                     }
 
                     @Override
                     protected void done() {
                         try {
-                            if (get()) {
-                                statusTextField.setText("");
-                                addressTextField.setEditable(true);
-                                passwordField.setEditable(true);
-                                connectButton.setEnabled(true);
-                            } else {
-                                statusTextField.setText(resourceBundle.getString("connection_failed"));
-                                addressTextField.setEditable(true);
-                                passwordField.setEditable(true);
-                                connectButton.setEnabled(true);
+                            Integer res = get();
+                            if (res == null) {
+                                // TODO
+                                System.exit(1);
+                            }
+                            switch (res) {
+                                case 0 -> {
+                                    statusTextField.setText(resourceBundle.getString("connected"));
+                                    addressTextField.setEditable(true);
+                                    passwordField.setEditable(true);
+                                    connectButton.setEnabled(true);
+                                }
+                                case -1 -> {
+                                    statusTextField.setText(resourceBundle.getString("connection_failed"));
+                                    addressTextField.setEditable(true);
+                                    passwordField.setEditable(true);
+                                    connectButton.setEnabled(true);
+                                }
+                                case -2 -> {
+                                    statusTextField.setText(resourceBundle.getString("password_wrong_client_side"));
+                                    addressTextField.setEditable(true);
+                                    passwordField.setEditable(true);
+                                    connectButton.setEnabled(true);
+                                }
                             }
                         } catch (Exception ex) {
                             ex.printStackTrace();

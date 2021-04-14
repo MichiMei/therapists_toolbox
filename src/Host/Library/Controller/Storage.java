@@ -1,4 +1,4 @@
-package Host;
+package Host.Library.Controller;
 
 import Library.ContentClasses.UnimplementedException;
 
@@ -294,7 +294,7 @@ public class Storage {
     }
 
     private static class SheetTree {
-        private abstract class Node {
+        private abstract static class Node {
             protected String name;
             protected char type;
             protected DefaultMutableTreeNode jTreeNode;
@@ -306,7 +306,7 @@ public class Storage {
             public abstract Info getInfo(TreePath path, int index) throws FaultyStorageStructureException;
         }
         private class Folder extends Node {
-            private TreeMap<String, Node> children;
+            private final TreeMap<String, Node> children;
 
             public Folder(String name) {
                 this.name = name;
@@ -364,7 +364,7 @@ public class Storage {
                     String[] data = line.split("\0", -1);
                     if (data[0].equals("f") && data.length == 7) {
                         // create file
-                        Node child = new File(data[1], data[2], Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5], Integer.parseInt(data[6])==1);
+                        Node child = new File(data[1], data[2], Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5], Integer.parseInt(data[6]) == 1);
                         children.put(data[1], child);
                         this.jTreeNode.add(child.getJTreeNode());
                     } else if (data[0].equals("d") && data.length == 3) {
@@ -378,12 +378,12 @@ public class Storage {
                 }
             }
         }
-        private class File extends Node {
-            private String fileName;
-            private int minVersion;
-            private int pages;
-            private String description;
-            private boolean randomized;
+        private static class File extends Node {
+            private final String fileName;
+            private final int minVersion;
+            private final int pages;
+            private final String description;
+            private final boolean randomized;
 
             public File (String name, String fileName, int minVersion, int pages, String description, boolean randomized) {
                 this.name = name;
@@ -396,12 +396,12 @@ public class Storage {
             }
 
             @Override
-            public void save(PrintWriter writer) throws IOException {
+            public void save(PrintWriter writer) {
                 writer.write(this.toString());
             }
 
             @Override
-            public Info getInfo(TreePath path, int index) throws FaultyStorageStructureException {
+            public Info getInfo(TreePath path, int index) {
                 assert(index+1 == 0);
                 return this.extractInfo(path);
             }
@@ -426,10 +426,10 @@ public class Storage {
             }
         }
 
-        private TreeMap<String, Node> children;
+        private final TreeMap<String, Node> children;
         private final String name = "TherapistsToolbox";
         private final char type = 'd';
-        private DefaultMutableTreeNode jTreeRoot;
+        private final DefaultMutableTreeNode jTreeRoot;
 
         public SheetTree(BufferedReader reader) throws IOException, CorruptedStorageException {
             children = new TreeMap<>();
@@ -468,7 +468,7 @@ public class Storage {
             String[] data = line.split("\0", -1);
             if (data[0].equals("f") && data.length == 7) {
                 // create file
-                Node child = new File(data[1], data[2], Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5], Integer.parseInt(data[6])==1);
+                Node child = new File(data[1], data[2], Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5], Integer.parseInt(data[6]) == 1);
                 children.put(data[1], child);
                 return child;
             } else if (data[0].equals("d") && data.length == 3) {
