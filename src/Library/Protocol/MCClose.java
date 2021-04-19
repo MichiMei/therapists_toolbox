@@ -28,4 +28,9 @@ public class MCClose extends MessageContent {
     public int getErrorCode() {
         return errorCode;
     }
+
+    @Override
+    public String toString() {
+        return "Close-0100:[errorCode:" + errorCode + "]";
+    }
 }

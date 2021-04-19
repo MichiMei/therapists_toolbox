@@ -1,8 +1,11 @@
-package Host.Library.GUI;
+package Host.Library.GUI.Games;
 
+import Host.Library.Controller.Games.FastReadController;
+import Host.Library.Controller.Games.GameControllerCreator;
 import Library.ContentPanes.Components.ImprovedFormattedTextField.ImprovedFormattedTextField;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
@@ -13,35 +16,38 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.function.Function;
 
-public class HostFastReadPane extends JPanel {
-    private boolean autoDisplay = false;
-    private boolean editMode = false;
+public class FastReadPane extends GamePanel {
+    private static final int ID = 0;
+
+    // references
+    private final Library.ContentPanes.Games.FastReadPane previewPane;
+    private final FastReadController controller;
+
+    // separator attributes
     private final Separator[] separators = new Separator[4];
     private int currentSeparatorIndex;
 
+    // status attributes
+    private boolean autoDisplay = false;
+    private boolean editMode = false;
+
+    // token attributes
     private String content = null;
     private int tokenStart = -1;
     private int tokenEnd = -1;
     private String currentToken = null;
 
-    private static class Separator {
-        public Separator(String resourceName, Function<Character, Boolean> isDelimiter) {
-            this.resourceName = resourceName;
-            this.isDelimiter = isDelimiter;
-        }
-
-        public String resourceName;
-        public Function<Character, Boolean> isDelimiter;
-    }
-
     public static void main(String[] args) {
         JFrame window = new JFrame();
-        window.setContentPane(new HostFastReadPane());
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        window.setContentPane(new FastReadPane(null));
         window.setVisible(true);
     }
 
-    public HostFastReadPane () {
+    public FastReadPane(GameControllerCreator.GameController con) {
         super();
+        this.controller = (FastReadController) con;
 
         separators[0] = new Separator("whitespaces", Character::isWhitespace);
         separators[1] = new Separator("spaces", Character::isSpaceChar);
@@ -108,8 +114,11 @@ public class HostFastReadPane extends JPanel {
         displayButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO tell communication layer to display
-                System.out.println("Displaying <" + currentToken + ">");
+                int millis = Integer.parseInt(timeSelector.getText());
+                previewPane.display(millis);
+                statusLabel.setIcon(new ImageIcon(this.getClass().getResource("/Library/Resources/Icons/red-circle.png")));
+                displayButton.setEnabled(false);
+                SwingUtilities.invokeLater(() -> controller.display(currentToken, millis));
             }
         });
 
@@ -120,8 +129,24 @@ public class HostFastReadPane extends JPanel {
             }
         });
 
+        endButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SwingUtilities.invokeLater(controller::end);
+            }
+        });
+
+        previewPane = new Library.ContentPanes.Games.FastReadPane(null);
+        previewPane.setBorder(new LineBorder(Color.GRAY, 1, true));
+        previewPanel.add(previewPane, BorderLayout.CENTER);
+
         setLayout(new BorderLayout());
         add(mainPanel, BorderLayout.CENTER);
+    }
+
+    public void displayFinished() {
+        statusLabel.setIcon(new ImageIcon(this.getClass().getResource("/Library/Resources/Icons/green-circle.png")));
+        displayButton.setEnabled(true);
     }
 
     private void setEditMode(boolean b) {
@@ -179,10 +204,8 @@ public class HostFastReadPane extends JPanel {
             currentToken = content.substring(tokenStart, tokenEnd).trim();
         } while (currentToken.length() <= 0);
 
-        System.out.println("Next token:");
-        System.out.println("start: " + tokenStart);
-        System.out.println("end  : " + tokenEnd);
-        System.out.println("token:<" + currentToken + ">\n");
+        // TODO sent setToken(currentToken)
+        previewPane.setToken(currentToken);
         highlight();
         if (autoDisplay) displayButton.doClick();
     }
@@ -195,10 +218,8 @@ public class HostFastReadPane extends JPanel {
             currentToken = content.substring(tokenStart, tokenEnd).trim();
         } while (currentToken.length() <= 0);
 
-        System.out.println("Previous token:");
-        System.out.println("start: " + tokenStart);
-        System.out.println("end  : " + tokenEnd);
-        System.out.println("token:<" + currentToken + ">\n");
+        // TODO sent setToken(currentToken)
+        previewPane.setToken(currentToken);
         highlight();
         if (autoDisplay) displayButton.doClick();
     }
@@ -239,8 +260,24 @@ public class HostFastReadPane extends JPanel {
     private JPanel mainPanel;
     private JTextArea textArea;
     private JPanel timeSelectorPanel;
+    private JPanel previewPanel;
+    private JButton endButton;
+    private JLabel statusLabel;
 
     private final ImprovedFormattedTextField timeSelector;
 
+    @Override
+    public int getID() {
+        return ID;
+    }
 
+    private static class Separator {
+        public Separator(String resourceName, Function<Character, Boolean> isDelimiter) {
+            this.resourceName = resourceName;
+            this.isDelimiter = isDelimiter;
+        }
+
+        public String resourceName;
+        public Function<Character, Boolean> isDelimiter;
+    }
 }

@@ -8,17 +8,20 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ResourceBundle;
 
+/**
+ * Login Panel
+ * Allows user inputs to connect to a host
+ */
 public class ClientLoginPane  extends JPanel {
 
     private final ClientController controller;
 
-    public static void main(String[] args) {
-        JFrame window = new JFrame();
-        window.setContentPane(new ClientLoginPane(null));
-        window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        window.setVisible(true);
-    }
+/*------------------------------------------------------MAIN_GUI------------------------------------------------------*/
 
+    /**
+     * Create Login Panel
+     * @param controller Controller reference to forward user inputs
+     */
     public ClientLoginPane(ClientController controller) {
         super();
         this.controller = controller;
@@ -87,6 +90,27 @@ public class ClientLoginPane  extends JPanel {
         });
     }
 
+/*-----------------------------------------------------CONTROLLER-----------------------------------------------------*/
+
+/*------------------------------------------------------PRIVATE------------------------------------------------------*/
+
+    /**
+     * Testing purposes
+     * Creates just this SUB-GUI -> many features won't work!
+     * @param args
+     */
+    public static void main(String[] args) {
+        JFrame window = new JFrame();
+        window.setContentPane(new ClientLoginPane(null));
+        window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        window.setVisible(true);
+    }
+
+    /**
+     * Transform string address into object
+     * @param text address as String IPv4:Port or [IPv6]:Port
+     * @return Object representation of the String
+     */
     private Address parseAddress (String text) {
         try {
             return new Address(text);

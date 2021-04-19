@@ -1,7 +1,7 @@
 package Host.Library;
 
 import Library.ContentClasses.Page;
-import Library.ContentClasses.UnimplementedException;
+import Library.UnimplementedException;
 
 import java.util.ArrayList;
 import java.util.Collections;

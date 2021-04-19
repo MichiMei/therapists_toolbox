@@ -1,10 +1,12 @@
 package Host.Library.GUI;
 
 import Host.Library.ConnectionLayer.HostConnector;
+import Host.Library.Controller.Games.GameControllerCreator;
 import Host.Library.Controller.HostController;
 import Host.Library.Controller.Storage;
+import Library.BadGameIDException;
 import Library.ConnectionLayer.Address;
-import Library.ContentClasses.UnimplementedException;
+import Library.UnimplementedException;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -22,6 +24,9 @@ public class HostMainPane extends JPanel {
     private final HostController controller;
     private final ResourceBundle resources;
     private final Logger logger;
+    private JTree sheetsTree;
+    private HostConnector.Status connectionStatus;
+    private JRadioButton[] gameButtons;
 
     public static void main(String[] args) {
         JFrame window = new JFrame();
@@ -97,19 +102,52 @@ public class HostMainPane extends JPanel {
         disconnectButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(controller::disconnect);
                 disableConnectionInput();
+                SwingUtilities.invokeLater(controller::disconnect);
             }
         });
 
         startButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO
-                throw new UnimplementedException("HostMainPane::startButton::actionListener unimpl");
+                logger.info("start pressed");
+                switch (sheetGamesTabbedPane.getSelectedIndex()) {
+                    case 0:
+                        controller.startWorkSheet(sheetsTree.getSelectionPath());
+                        break;
+                    case 1:
+                        int id = -1;
+                        for (int i = 0; i < gameButtons.length; i++) {
+                            if (gameButtons[i].isSelected()) {
+                                id = i;
+                                break;
+                            }
+                        }
+                        assert(id != -1);
+                        logger.info("selected game: " + id);
+                        controller.startGame(id);
+                    default:
+                }
             }
         });
 
+        sheetGamesTabbedPane.addChangeListener(e -> displayInfo());
+
+        gamesPanel.setLayout(new BoxLayout(gamesPanel, BoxLayout.Y_AXIS));
+        ButtonGroup gamesRadioButtons = new ButtonGroup();
+        gameButtons = new JRadioButton[1];  // TODO modify for several games
+        for (int i = 0; i < 1; i++) {       // TODO modify for several games
+            JRadioButton rb = new JRadioButton(resources.getString("fast_read"));
+            gamesPanel.add(rb);
+            gamesRadioButtons.add(rb);
+            gameButtons[i] = rb;
+            rb.addActionListener(new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    displayInfo();
+                }
+            });
+        }
     }
 
     /**
@@ -119,57 +157,24 @@ public class HostMainPane extends JPanel {
     public void reloadSheetTree(DefaultMutableTreeNode rootNode) {
         DefaultTreeModel model = new DefaultTreeModel(rootNode);
         model.setAsksAllowsChildren(true);
-        JTree tree = new JTree(model);
-        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        tree.getSelectionModel().addTreeSelectionListener(
+        sheetsTree = new JTree(model);
+        sheetsTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        sheetsTree.getSelectionModel().addTreeSelectionListener(
                 e -> {
-                    TreePath path = e.getNewLeadSelectionPath();
-                    if (path == null) {
-                        String msg = "null-element selected in JTree\n";
-                        msg += "check if anything is selected\n";
-                        msg += "previous path:\n";
-                        msg += e.getOldLeadSelectionPath().toString();
-                        msg += "\n";
-                        Dialogs.developerDialog(msg);
-                        return;
-                    }
-                    try {
-                        Storage.Info info = controller.getFileInfo(path);
-                        infoNameTextField.setText(info.getName());
-                        infoDirTextField.setText(info.getPath());
-                        if (info.isDirectory()) {
-                            infoDescriptionTextField.setText("");
-                            infoVersionTextField1.setText("");
-                            infoPagesTextField.setText("");
-                            newDirButton.setEnabled(true);
-                            editDirButton.setEnabled(true);
-                            deleteDirButton.setEnabled(true);
-                            newFileButton.setEnabled(false);
-                            editFileButton.setEnabled(false);
-                            deleteFileButton.setEnabled(false);
-                        } else {
-                            infoDescriptionTextField.setText(info.getDescription());
-                            infoVersionTextField1.setText("" + info.getMinVersion());
-                            infoPagesTextField.setText("" + info.getPages());
-                            newDirButton.setEnabled(false);
-                            editDirButton.setEnabled(false);
-                            deleteDirButton.setEnabled(false);
-                            newFileButton.setEnabled(true);
-                            editFileButton.setEnabled(true);
-                            deleteFileButton.setEnabled(true);
-                        }
-                    } catch (Storage.FaultyStorageStructureException ex) {
-                        ex.printStackTrace();
-                        // TODO
-                        throw new UnimplementedException("");
-                    }
+                    displayInfo();
                 }
         );
         workSheetsPanel.removeAll();
-        workSheetsPanel.add(tree, BorderLayout.CENTER);
+        workSheetsPanel.add(sheetsTree, BorderLayout.CENTER);
     }
 
+    /**
+     * Called to notify GUI of a connection status change
+     * @param status current connection status
+     * @param msg console message to display
+     */
     public void connectionStatusChanged(HostConnector.Status status, String msg) {
+        this.connectionStatus = status;
         disableConnectionInput();
         switch (status) {
             case Online -> {
@@ -192,7 +197,7 @@ public class HostMainPane extends JPanel {
             }
             case Connected -> {
                 disconnectButton.setEnabled(true);
-                startButton.setEnabled(true);
+                displayInfo();  // enables start button, if fitting element selected
                 statusFormattedTextField.setText(resources.getString("connected"));
             }
             case Connecting -> {
@@ -204,6 +209,131 @@ public class HostMainPane extends JPanel {
     }
 
 /*------------------------------------------------------PRIVATE------------------------------------------------------*/
+
+    /**
+     * Called after change to work-sheet or game selection or tabbed-pane switch
+     * Displays info about the selected file, folder or game
+     */
+    private void displayInfo() {
+        int tpSelection = sheetGamesTabbedPane.getSelectedIndex();
+        assert (tpSelection >= 0);
+        assert (tpSelection < 2);
+        if (tpSelection == 0) {     // worksheets selected
+            displayFsElementInfo();
+        } else {                    // games selected
+            displayGameInfo();
+        }
+    }
+
+    /**
+     * Displays info about the selected file or folder
+     */
+    private void displayFsElementInfo() {
+        assert (sheetGamesTabbedPane.getSelectedIndex() == 0);
+
+        TreePath path = sheetsTree.getSelectionPath();
+        if (path == null) {
+            infoNameTextField.setText("");
+            infoDirTextField.setText("");
+            infoDescriptionTextField.setText("");
+            infoVersionTextField1.setText("");
+            infoPagesTextField.setText("");
+            startButton.setEnabled(false);
+            newDirButton.setEnabled(false);
+            editDirButton.setEnabled(false);
+            deleteDirButton.setEnabled(false);
+            newFileButton.setEnabled(false);
+            editFileButton.setEnabled(false);
+            deleteFileButton.setEnabled(false);
+        } else {
+            try {
+                Storage.Info info = controller.getFileInfo(path);
+                infoNameTextField.setText(info.getName());
+                infoDirTextField.setText(info.getPath());
+                if (info.isDirectory()) {
+                    infoDescriptionTextField.setText("");
+                    infoVersionTextField1.setText("");
+                    infoPagesTextField.setText("");
+                    startButton.setEnabled(false);
+                    newDirButton.setEnabled(true);
+                    editDirButton.setEnabled(true);
+                    deleteDirButton.setEnabled(true);
+                    newFileButton.setEnabled(true);
+                    editFileButton.setEnabled(false);
+                    deleteFileButton.setEnabled(false);
+                } else {
+                    enableStartButton();
+                    infoDescriptionTextField.setText(info.getDescription());
+                    infoVersionTextField1.setText("" + info.getMinVersion());
+                    infoPagesTextField.setText("" + info.getPages());
+                    newDirButton.setEnabled(false);
+                    editDirButton.setEnabled(false);
+                    deleteDirButton.setEnabled(false);
+                    newFileButton.setEnabled(true);
+                    editFileButton.setEnabled(true);
+                    deleteFileButton.setEnabled(true);
+                }
+            } catch (Storage.FaultyStorageStructureException e) {
+                e.printStackTrace();
+                // TODO
+                throw new UnimplementedException("");
+            }
+        }
+    }
+
+    /**
+     * Display info about the selected game
+     */
+    private void displayGameInfo() {
+        startButton.setEnabled(false);
+        newDirButton.setEnabled(false);
+        editDirButton.setEnabled(false);
+        deleteDirButton.setEnabled(false);
+        newFileButton.setEnabled(false);
+        editFileButton.setEnabled(false);
+        deleteFileButton.setEnabled(false);
+
+        int gameID = -1;
+        for (int i = 0; i < gameButtons.length; i++) {
+            if (gameButtons[i].isSelected()) {
+                gameID = i;
+                break;
+            }
+        }
+
+        if (gameID == -1) {
+            infoNameTextField.setText("");
+            infoDirTextField.setText("");
+            infoDescriptionTextField.setText("");
+            infoVersionTextField1.setText("");
+            infoPagesTextField.setText("");
+        } else {
+            try {
+                enableStartButton();
+                GameControllerCreator.Info info = controller.getGameInfo(gameID);
+                infoNameTextField.setText(info.getName());
+                infoDirTextField.setText("");
+                infoDescriptionTextField.setText(info.getDescription());
+                infoVersionTextField1.setText("");
+                infoPagesTextField.setText("");
+            } catch (BadGameIDException e) {
+                e.printStackTrace();
+                // TODO
+                throw new UnimplementedException("");
+            }
+        }
+    }
+
+    /**
+     * Enables start-button, if connected to a client
+     */
+    private void enableStartButton() {
+        logger.info("enable start");
+        if (connectionStatus == HostConnector.Status.Connected) {
+            logger.info("enabled");
+            startButton.setEnabled(true);
+        }
+    }
 
     private void disableConnectionInput() {
         onlineToggleButton.setEnabled(false);
@@ -301,6 +431,7 @@ public class HostMainPane extends JPanel {
     private JTextField infoPagesTextField;
     private JTextPane consoleTextPane;
     private JPanel workSheetsPanel;
-    private JButton fastReadButton;
+    private JTabbedPane sheetGamesTabbedPane;
+    private JPanel gamesPanel;
 
 }

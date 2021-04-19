@@ -1,4 +1,4 @@
-package Library.ContentClasses;
+package Library;
 
 public class UnimplementedException extends NullPointerException {
 

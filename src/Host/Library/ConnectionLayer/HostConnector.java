@@ -1,7 +1,7 @@
 package Host.Library.ConnectionLayer;
 
 import Host.Library.Controller.HostController;
-import Library.ContentClasses.UnimplementedException;
+import Library.UnimplementedException;
 import Library.Protocol.*;
 
 import java.io.*;
@@ -11,6 +11,10 @@ import java.net.SocketException;
 import java.util.ResourceBundle;
 import java.util.logging.Logger;
 
+/**
+ * This class is used on host-side to listen for incoming client communication attempts
+ * The main purpose is to create a Connection object for client <-> host communication
+ */
 public class HostConnector {
     public static final int DEFAULT_PORT = 23432;
     private String password;
@@ -21,6 +25,23 @@ public class HostConnector {
     private Connection connection = null;
     private Thread listener = null;
 
+/*-----------------------------------------------------CONTROLLER-----------------------------------------------------*/
+
+    /**
+     * Create a Host connector to listen for incoming connection attempts
+     * @param controller Controller reference for notification purposes
+     */
+    public HostConnector(HostController controller) {
+        logger = Logger.getLogger(HostConnector.class.getName());
+        this.controller = controller;
+    }
+
+    /**
+     * Start listening for incoming transmissions
+     * @param port listening port
+     * @param password optional password for client verification
+     * @throws IOException thrown by socket operation, usually a severe problem resulting in program halt
+     */
     public void startListening(int port, String password) throws IOException {
         assert (serverSocket == null);
         assert (listener == null);
@@ -33,6 +54,9 @@ public class HostConnector {
         logger.info("Listener started");
     }
 
+    /**
+     * Stop the listening process
+     */
     public void stopListening() {
         assert (serverSocket != null);
         assert (listener != null);
@@ -46,17 +70,23 @@ public class HostConnector {
         }
     }
 
-    public void disconnect() {
+    /**
+     * Disconnect from the client
+     */
+    public void disconnect(int errorCode) {
         assert (connection != null);
-        connection.close(1);
+        connection.close(errorCode);
         connection = null;
     }
 
-    public HostConnector(HostController controller) {
-        logger = Logger.getLogger(HostConnector.class.getName());
-        this.controller = controller;
-    }
+/*------------------------------------------------------PRIVATE------------------------------------------------------*/
 
+    /**
+     * Called by listener to forward connection status changes
+     * @param status new connection status
+     * @param connection connection object (only if status==connected)
+     * @param msg special message to display in GUI
+     */
     private void statusChanged(Status status, Connection connection, String msg) {
         if (status == Status.Connected) {
             this.connection = connection;
@@ -70,9 +100,13 @@ public class HostConnector {
             this.serverSocket = null;
             this.listener = null;
         }
-        controller.connectionStatus(status, msg);
+        controller.connectionStatus(status, connection, msg);
     }
 
+    /**
+     * This class represents the connection between a host and a client and is able to send/receive messages to/from
+     * the client
+     */
     public class Connection {
         private final Socket clientSocket;
         private final ObjectInputStream in;
@@ -80,6 +114,13 @@ public class HostConnector {
 
         private int clientVersion;
 
+        /**
+         * Create Connection object
+         * Creates streams and prepares 'low-level' communication
+         * [possibly blocking]
+         * @param clientSocket Socket-connection between client and host
+         * @throws IOException thrown by socket operation, usually a severe problem resulting in program halt
+         */
         public Connection (Socket clientSocket) throws IOException {
             this.clientSocket = clientSocket;
             out = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -87,6 +128,13 @@ public class HostConnector {
             in = new ObjectInputStream(clientSocket.getInputStream());
         }
 
+        /**
+         * Establishes communication via communication initiation handshake
+         * [blocking]
+         * @return true if connection established successfully; false if password incorrect
+         * @throws ProtocolViolationException thrown if client violated communication initiation protocol
+         * @throws ConnectionClosedException thrown if host closed socket surprisingly
+         */
         private boolean initiateCommunication() throws ProtocolViolationException, ConnectionClosedException {
             // wait for Hello
             Message msg = receiveMessage();
@@ -127,7 +175,7 @@ public class HostConnector {
                 }
                 case MCClose.TYPE_ID -> {
                     logger.warning("connection closed after hello-reply");
-                    throw new ConnectionClosedException("Connection closed after hello-reply: " + helloReply.toString());
+                    throw new ConnectionClosedException("Connection closed after hello-reply: " + helloReply.toString(), ((MCClose)msg.getContent()).getErrorCode());
                 }
                 default -> {
                     logger.warning("protocol violation after hello-reply");
@@ -145,7 +193,12 @@ public class HostConnector {
             return true;
         }
 
+        /**
+         * Send Message Object to client
+         * @param msg Message Object
+         */
         public void sendMessage(Message msg) {
+            logger.info("send:\n" + msg.toString());
             try {
                 out.writeObject(msg);
             } catch (IOException e) {
@@ -155,19 +208,37 @@ public class HostConnector {
             }
         }
 
+        /**
+         * Receive next message Object from client
+         * [blocking]
+         * @return Message Object
+         */
         public Message receiveMessage() {
             Message msg = null;
             try {
                 msg = (Message) in.readObject();
+            } catch (SocketException e) {
+                if (clientSocket.isClosed()) {
+                    return null;
+                } else {
+                    logger.severe("receiveMessage(...) failed\n" + e.toString() + "\nshutting down");
+                    e.printStackTrace();
+                    System.exit(1);
+                }
             } catch (IOException | ClassNotFoundException e) {
                 logger.severe("receiveMessage(...) failed\n" + e.toString() + "\nshutting down");
                 e.printStackTrace();
                 System.exit(1);
             }
             assert (msg != null);
+            logger.info("received:\n" + msg.toString());
             return msg;
         }
 
+        /**
+         * Close connection by sending close message and closing the underlying socket
+         * @param errorCode closing-reason to send to the client
+         */
         public void close(int errorCode) {
             sendMessage(new Message(MCClose.TYPE_ID, new MCClose(errorCode)));
             try {
@@ -180,18 +251,32 @@ public class HostConnector {
             }
         }
 
+        /**
+         * Get the Clients version
+         * @return client version
+         */
         public int getClientVersion() {
             return clientVersion;
         }
     }
 
+    /**
+     * This class is used to Listen independently of other executions
+     */
     class Listener implements Runnable {
         ServerSocket serverSocket;
 
+        /**
+         * Create a listener for this socket
+         * @param serverSocket
+         */
         public Listener(ServerSocket serverSocket) {
             this.serverSocket = serverSocket;
         }
 
+        /**
+         * Listen until fatal error occurs or connection attempt by a client
+         */
         @Override
         public void run() {
 
@@ -246,5 +331,29 @@ public class HostConnector {
         }
     }
 
+    public static class Receiver implements Runnable {
+        private final Connection connection;
+        private final HostController controller;
+
+        public Receiver(HostController controller, Connection connection) {
+            this.controller = controller;
+            this.connection = connection;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                Message msg;
+                msg = connection.receiveMessage();
+                if (msg == null) break;
+                controller.messageReceived(msg);
+                if (msg.getType() == MCClose.TYPE_ID) break;
+            }
+        }
+    }
+
+    /**
+     * Representing the current connection status
+     */
     public enum Status {Offline, Online, Connecting, Connected}
 }

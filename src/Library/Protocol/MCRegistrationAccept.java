@@ -15,4 +15,9 @@ public class MCRegistrationAccept extends MessageContent {
     public short getType() {
         return TYPE_ID;
     }
+
+    @Override
+    public String toString() {
+        return "RegistrationAccept-0104:[]";
+    }
 }

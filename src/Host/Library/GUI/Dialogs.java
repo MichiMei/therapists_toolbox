@@ -1,7 +1,9 @@
 package Host.Library.GUI;
 
 import javax.swing.*;
+import java.awt.*;
 import java.nio.file.Path;
+import java.util.ResourceBundle;
 
 public class Dialogs {
 
@@ -12,12 +14,14 @@ public class Dialogs {
      * @throws CancelPressedException thrown iff user presses cancel (or close)
      */
     public static boolean showStartDialog() throws CancelPressedException {
-        String title = "Select storage location";
-        String message = "<html><P><font color=black>The program was started for the first time, a location for the data storage needs to be selected.<br></font></P><P><br>If this or a previous version of this program was already used, <br>You can select the ‘Existing’ location to import the old data.<br>(The storage location contains a folder called ‘TherapistsToolbox’)<br></P><P><br>Otherwise choose ‘New’ to select a new location.</P></html>";
+        ResourceBundle resources = ResourceBundle.getBundle("Library/Resources/StringLiterals");
+
+        String title = resources.getString("select_storage");
+        String message = resources.getString("first_start_msg");
         String[] options = {
-                "New",
-                "Existing",
-                "Cancel",
+                resources.getString("new"),
+                resources.getString("existing"),
+                resources.getString("cancel"),
         };
         int result = JOptionPane.showOptionDialog(
                 null,                         // the parent that the dialog blocks
@@ -78,5 +82,25 @@ public class Dialogs {
         public CancelPressedException(String message) {
             super(message);
         }
+    }
+
+    public static void aboutDialog(Component parent) {
+        ResourceBundle resources = ResourceBundle.getBundle("Library/Resources/StringLiterals");
+
+        String title = resources.getString("about") + " " + resources.getString("therapists_toolbox");
+        String message = resources.getString("about_message_host");
+        String[] options = {
+                resources.getString("ok")
+        };
+        int result = JOptionPane.showOptionDialog(
+                parent,                         // the parent that the dialog blocks
+                message,                                    // the dialog message array
+                title,                                // the title of the dialog window
+                JOptionPane.DEFAULT_OPTION,                 // option type
+                JOptionPane.INFORMATION_MESSAGE,            // message type
+                null,                                  // optional icon, use null to use the default icon
+                options,                                    // options string array, will be made into buttons
+                options[0]                                  // option that should be made into a default button
+        );
     }
 }

@@ -23,5 +23,10 @@ public class MCHello extends MessageContent {
     public int getVersion() {
         return version;
     }
+
+    @Override
+    public String toString() {
+        return "Hello-0101:[version:" + version + "]";
+    }
 }
 

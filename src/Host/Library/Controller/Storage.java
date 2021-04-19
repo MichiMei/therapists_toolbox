@@ -1,6 +1,6 @@
 package Host.Library.Controller;
 
-import Library.ContentClasses.UnimplementedException;
+import Library.UnimplementedException;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
@@ -178,7 +178,7 @@ public class Storage {
         Files.createFile(indexFile);
         logger.info("index-file created");
         BufferedWriter writer = new BufferedWriter(Files.newBufferedWriter(indexFile));
-        writer.append("f").append("\0").append("TherapistsToolbox").append("\0").append("0").append("\n");
+        writer.append("d").append("\0").append("TherapistsToolbox").append("\0").append("0").append("\n");
         writer.flush();
 
         // create sub-folders (Sheets, Pictures, tmp)
@@ -451,6 +451,8 @@ public class Storage {
             }
             String[] data = line.split("\0", -1);
             if (data.length != 3 || !data[0].equals("" + this.type) || !data[1].equals("" + this.name)) {
+                System.out.println(data.length);
+                System.out.println(data.length);
                 throw new CorruptedStorageException("Index file: root wrong");
             }
             int numberOfChildren = Integer.parseInt(data[2]);
