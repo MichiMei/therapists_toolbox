@@ -1,7 +1,8 @@
 package Library.ContentPanes.Games;
 
-import Client.Library.Controller.Games.FastReadController;
-import Client.Library.Controller.Games.GameControllerCreator;
+import Client.Controller.Games.FastReadController;
+import Client.Controller.Games.GameControllerCreator;
+import Library.Resources.Fonts.FontLoader;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +33,7 @@ public class FastReadPane extends GamePanel {
         this.previewMode = controller == null;
         this.controller = (FastReadController) controller;
 
+        textLabel.setFont(FontLoader.getInstance().getPupilFont(12));
         textLabel.setHorizontalAlignment(JLabel.CENTER);
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -78,19 +80,27 @@ public class FastReadPane extends GamePanel {
 
 
     private void setText(String text) {
-        textLabel.setText(text);
+        textLabel.setVisible(false);
+        if (text != null && text.length() > 0 && text.charAt(0) == 'W') {
+            textLabel.setText(" " + text + " ");
+        } else {
+            textLabel.setText(text);
+        }
         Font old = textLabel.getFont();
         int fontSize = getMaxFontSize(text);
         textLabel.setFont(new Font(old.getName(), old.getStyle(), fontSize));
-        System.out.println("set '" + text + "' with " + fontSize);
+        textLabel.setVisible(true);
         //setMaxFontSize();
     }
 
     private int getMaxFontSize(String str) {
-        int fontSize = 1;
+        int fontSize = 12;
         if (str == null || str.length() == 0) return fontSize;
         double prevWidth = 0;
         double prevHeight = 0;
+        double maxWidth = textLabel.getWidth()*0.5;
+        double maxHeight = textLabel.getHeight()/2.5;
+
         while (true) {
             Font old = textLabel.getFont();
             Font font = new Font(old.getName(), old.getStyle(), fontSize+1);
@@ -99,21 +109,20 @@ public class FastReadPane extends GamePanel {
             Rectangle2D rect = layout.getBounds();
             double width = rect.getWidth();
             double height = rect.getHeight();
-            if (width > textLabel.getWidth() || height > textLabel.getWidth()) {
-                System.out.println("exceeded");
+            if (width > maxWidth || height > maxHeight) {
                 break;
             }
             if (prevWidth == width || prevHeight == height) {
-                System.out.println("no change");
                 break;
             }
             prevHeight = height; prevWidth = width;
             fontSize++;
         }
-        return fontSize*3/4;
+        System.out.println("return " + fontSize);
+        return fontSize;
     }
 
-    private void setMaxFontSize() {
+    /*private void setMaxFontSize() {
         Font labelFont = textLabel.getFont();
         String labelText = textLabel.getText();
 
@@ -133,7 +142,7 @@ public class FastReadPane extends GamePanel {
 
         // Set the label's font size to the newly determined size.
         textLabel.setFont(new Font(labelFont.getName(), Font.PLAIN, fontSizeToUse));
-    }
+    }*/
 
     private JPanel panel1;
     private JLabel textLabel;
