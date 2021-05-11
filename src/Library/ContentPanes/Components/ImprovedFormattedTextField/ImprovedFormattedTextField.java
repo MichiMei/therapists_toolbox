@@ -97,6 +97,7 @@ public class ImprovedFormattedTextField extends JFormattedTextField {
             try {
                 Object o = formatter.stringToValue( getText() );
                 if ((long)o <= 0) return false; // TODO better option to hinder values <=0
+                if ((long)o > 60000) return false;
                 return true;
             } catch ( ParseException e ) {
                 return false;

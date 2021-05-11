@@ -18,4 +18,9 @@ public class Message implements Serializable {
     public MessageContent getContent() {
         return content;
     }
+
+    @Override
+    public String toString() {
+        return "Message:[type:" + type + "; content:[" + content.toString() + "]]";
+    }
 }

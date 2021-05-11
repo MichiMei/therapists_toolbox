@@ -32,5 +32,10 @@ public class MCHelloReply extends MessageContent {
     public boolean isPwRequired() {
         return (flags & 0b10000000) != 0;
     }
+
+    @Override
+    public String toString() {
+        return "HelloReply-0102:[flags:" + flags + "]";
+    }
 }
 

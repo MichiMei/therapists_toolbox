@@ -1,6 +1,6 @@
 package Library.ContentClasses;
 
-import Library.ContentPanes.SingleChoiceTextQuestionPane;
+import Library.ContentPanes.WorkSheets.SingleChoiceTextQuestionPane;
 
 import javax.swing.*;
 

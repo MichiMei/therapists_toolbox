@@ -23,5 +23,10 @@ public class MCRegistration extends MessageContent {
     public String getPassword() {
         return password;
     }
+
+    @Override
+    public String toString() {
+        return "Registration-0103:[password:" + password + "]";
+    }
 }
 
