@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TTHost:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/TTHost_jar</output-path>
+    <root id="archive" name="TTHost.jar">
+      <element id="module-output" name="TTHost" />
+      <element id="module-output" name="TTLib" />
+    </root>
+  </artifact>
+</component>
