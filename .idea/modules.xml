@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/TTClient/TTClient.iml" filepath="$PROJECT_DIR$/TTClient/TTClient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TTConnectionTester/TTConnectionTester.iml" filepath="$PROJECT_DIR$/TTConnectionTester/TTConnectionTester.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TTHost/TTHost.iml" filepath="$PROJECT_DIR$/TTHost/TTHost.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TTLib/TTLib.iml" filepath="$PROJECT_DIR$/TTLib/TTLib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TherapistsToolbox.iml" filepath="$PROJECT_DIR$/TherapistsToolbox.iml" />
+    </modules>
+  </component>
+</project>
